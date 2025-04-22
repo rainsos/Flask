@@ -2,6 +2,7 @@ from flask import Flask
 from flask_smorest import Api
 from db import db
 from models import User, Board
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 
@@ -9,7 +10,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:7722@localhost/oz'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
-
+migrate = Migrate(app, db)
 
 # blue print 설정
 app.config["API_TITLE"] = "My API"
