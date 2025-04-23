@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 관리 시스템</title>
+    <script>
+      // 사용자 목록을 요청하여 화면에 출력
+      function getUsers() {
+        fetch('/users')
+          .then(response => response.json())
+          .then(data => {
+            let userList = document.getElementById('user-list');
+            userList.innerHTML = '';  // 기존 목록 초기화
+            data.users.forEach(user => {
+              // 각 사용자와 해당 사용자의 게시물 제목을 출력
+              let postTitles = user.posts.map(post => post.title).join(', ');
+              userList.innerHTML += `<li>${user.username} - 게시물: ${postTitles}</li>`;
+            });
+          });
+      }
+      // 사용자 생성 요청
+      function createUser() {
+        const username = document.getElementById('new-username').value;
+        fetch('/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ "username": username })
+        })
+          .then(response => response.json())
+          .then(data => {
+            alert('사용자가 생성되었습니다: ' + data.username);
+            getUsers();
+          });
+      }
+
+      // 특정 사용자에 게시물 추가
+      function addPost() {
+        const username = document.getElementById('post-username').value;
+        const title = document.getElementById('post-title').value;
+        const likes = parseInt(document.getElementById('post-likes').value, 10);
+        fetch(`/users/post/${username}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ "title": title, "likes": likes })
+        })
+          .then(response => response.json())
+          .then(data => {
+            alert('게시물이 추가되었습니다: ' + data.title);
+            getPosts(username);
+          });
+      }
+
+      // 특정 사용자의 게시물 조회
+      function getPosts(username) {
+        fetch(`/users/post/${username}`)
+          .then(response => response.json())
+          .then(data => {
+            let postList = document.getElementById('post-list');
+            postList.innerHTML = '';  // 기존 목록 초기화
+            data.posts.forEach(post => {
+              postList.innerHTML += `<li>${post.title} - 좋아요: ${post.likes}</li>`;
+            });
+          });
+      }
+
+      // 게시물 좋아요 수 증가
+      function likePost() {
+        const username = document.getElementById('like-username').value;
+        const title = document.getElementById('like-title').value;
+        fetch(`/users/post/like/${username}/${title}`, {
+          method: 'PUT'
+        })
+          .then(response => response.json())
+          .then(data => {
+            alert('게시물의 좋아요가 증가되었습니다: ' + data.likes);
+            getPosts(username);
+          });
+      }
+
+      // 사용자 삭제 요청
+      function deleteUser() {
+        const username = document.getElementById('delete-username').value;
+        fetch(`/users/${username}`, {
+          method: 'DELETE'
+        })
+          .then(response => response.json())
+          .then(data => {
+            alert('사용자가 삭제되었습니다');
+            getUsers();
+          });
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1>사용자 관리 시스템</h1>
+
+    <h2>1. 사용자 목록 조회</h2>
+    <button onclick="getUsers()">사용자 목록 조회</button>
+    <ul id="user-list"></ul>
+
+    <h2>2. 사용자 생성</h2>
+    <input type="text" id="new-username" placeholder="사용자 이름">
+    <button onclick="createUser()">사용자 생성</button>
+
+    <h2>3. 게시물 추가</h2>
+    <input type="text" id="post-username" placeholder="사용자 이름">
+    <input type="text" id="post-title" placeholder="게시물 제목">
+    <input type="number" id="post-likes" placeholder="좋아요 수">
+    <button onclick="addPost()">게시물 추가</button>
+
+    <h2>4. 사용자별 게시물 조회</h2>
+    <input type="text" id="get-posts-username" placeholder="사용자 이름">
+    <button onclick="getPosts(document.getElementById('get-posts-username').value)">게시물 조회</button>
+    <ul id="post-list"></ul>
+
+    <h2>5. 게시물 좋아요 수 증가</h2>
+    <input type="text" id="like-username" placeholder="사용자 이름">
+    <input type="text" id="like-title" placeholder="게시물 제목">
+    <button onclick="likePost()">좋아요 증가</button>
+
+    <h2>6. 사용자 삭제</h2>
+    <input type="text" id="delete-username" placeholder="사용자 이름">
+    <button onclick="deleteUser()">사용자 삭제</button>
+  </body>
+
+</html>
